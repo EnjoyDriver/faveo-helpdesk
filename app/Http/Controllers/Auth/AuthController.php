@@ -194,7 +194,7 @@ class AuthController extends Controller
                 $var = $this->PhpMailController->sendmail($from = $this->PhpMailController->mailfrom('1', '0'), $to = ['name' => $name, 'email' => $request->input('email')], $message = ['subject' => null, 'scenario' => 'registration'], $template_variables = ['user' => $name, 'email_address' => $request->input('email'), 'password_reset_link' => url('account/activate/'.$code)]);
             }
             if ($settings->status == 1 || $settings->status == '1') {
-                if (count($sms) > 0) {
+                if ($sms) {
                     if ($sms->status == 1 || $sms->status == '1') {
                         $message12 = Lang::get('lang.activate_your_account_click_on_Link_that_send_to_your_mail_and_moble');
                     } else {
