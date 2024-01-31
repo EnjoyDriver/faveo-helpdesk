@@ -854,12 +854,12 @@ class ApiController extends Controller
     /**
      * Get help topics.
      *
-     * @return json
+     * @return \Illuminate\Http\JsonResponse
      */
     public function getHelpTopic()
     {
         try {
-            $result = $this->helptopic->with('customForm')->get();
+            $result = $this->helptopic->with('customForm.allFields')->get();
 
             return response()->json(compact('result'));
         } catch (\Exception $e) {

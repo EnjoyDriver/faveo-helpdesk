@@ -28,6 +28,12 @@ class Forms extends BaseModel
 
         return $relation;
     }
+    public function allFields()
+    {
+        $relation = $this->fieldRelation();
+
+        return $relation;
+    }
 
     public function fieldsDelete()
     {
