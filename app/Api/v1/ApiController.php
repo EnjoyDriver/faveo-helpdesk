@@ -859,7 +859,7 @@ class ApiController extends Controller
     public function getHelpTopic()
     {
         try {
-            $result = $this->helptopic->with('customForm.fields')->get();
+            $result = $this->helptopic->with('customForm')->get();
 
             return response()->json(compact('result'));
         } catch (\Exception $e) {
