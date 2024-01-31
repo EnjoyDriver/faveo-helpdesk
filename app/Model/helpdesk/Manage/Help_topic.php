@@ -21,4 +21,13 @@ class Help_topic extends BaseModel
 
         return $this->belongsTo($related, $foreignKey);
     }
+
+    public function customForm()
+    {
+        $related = \App\Model\helpdesk\Form\Forms::class;
+        $foreignKey = 'custom_form';
+
+        return $this->belongsTo($related, $foreignKey);
+    }
+
 }
