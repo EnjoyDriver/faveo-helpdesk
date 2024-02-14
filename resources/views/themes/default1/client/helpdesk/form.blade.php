@@ -139,7 +139,8 @@ class = "nav-item active"
                             @if($email_mandatory->status == 1 || $email_mandatory->status == '1')
                                 <span class="text-red"> *</span>
                             @endif
-                            {!! Form::email('Email',null,['class' => 'form-control']) !!}
+                            {!! Form::email('Email',request()->has('email') ? request()->email : null
+                            ,['class' => 'form-control']) !!}
                         </div>
                         @endif
 
@@ -151,7 +152,7 @@ class = "nav-item active"
                                     <span class="text-red"> *</span>
                                     @endif
 
-                            {!! Form::text('Code',null,['class' => 'form-control', 'placeholder' => $phonecode, 'title' => Lang::get('lang.enter-country-phone-code')]) !!}
+                            {!! Form::text('Code',$phonecode,['class' => 'form-control', 'placeholder' => $phonecode, 'title' => Lang::get('lang.enter-country-phone-code')]) !!}
                         </div>
                         <div class="col-md-5 form-group {{ $errors->has('mobile') ? 'has-error' : '' }}">
                             {!! Form::label('mobile',Lang::get('lang.mobile_number')) !!}
@@ -160,10 +161,10 @@ class = "nav-item active"
                                     @endif
                             {!! Form::text('mobile',null,['class' => 'form-control']) !!}
                         </div>
-                        <div class="col-md-5 form-group {{ $errors->has('Phone') ? 'has-error' : '' }}">
-                            {!! Form::label('Phone',Lang::get('lang.phone')) !!}
-                            {!! Form::text('Phone',null,['class' => 'form-control']) !!}
-                        </div>
+{{--                        <div class="col-md-5 form-group {{ $errors->has('Phone') ? 'has-error' : '' }}">--}}
+{{--                            {!! Form::label('Phone',Lang::get('lang.phone')) !!}--}}
+{{--                            {!! Form::text('Phone',null,['class' => 'form-control']) !!}--}}
+{{--                        </div>--}}
                         @else
                             {!! Form::hidden('mobile',Auth::user()->mobile,['class' => 'form-control']) !!}
                             {!! Form::hidden('Code',Auth::user()->country_code,['class' => 'form-control']) !!}
