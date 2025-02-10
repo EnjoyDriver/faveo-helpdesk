@@ -2612,7 +2612,11 @@ class TicketController extends Controller
     public static function getSubject($subject)
     {
         //$subject = $this->attributes['title'];
-        $array = imap_mime_header_decode($subject);
+        try {
+            $array = imap_mime_header_decode($subject);
+        }catch (\Exception $e) {
+            $array = [];
+        }
         $title = '';
         if (is_array($array) && count($array) > 0) {
             foreach ($array as $text) {

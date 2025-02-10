@@ -4,7 +4,7 @@ use Illuminate\Support\Str;
 
 function loging($context, $message, $level = 'error', $array = [])
 {
-    \Log::$level($message.':-:-:-'.$context, $array);
+    \Log::$level($message . ':-:-:-' . $context, $array);
 }
 
 function checkArray($key, $array)
@@ -20,19 +20,19 @@ function checkArray($key, $array)
 function mime($type)
 {
     if ($type == 'jpg' ||
-            $type == 'png' ||
-            $type == 'PNG' ||
-            $type == 'JPG' ||
-            $type == 'jpeg' ||
-            $type == 'JPEG' ||
-            $type == 'gif' ||
-            $type == 'GIF' ||
-            $type == 'image/jpeg' ||
-            $type == 'image/jpg' ||
-            $type == 'image/gif' ||
-           // $type == "application/octet-stream" ||
-            $type == 'image/png' ||
-            Str::startsWith($type, 'image')) {
+        $type == 'png' ||
+        $type == 'PNG' ||
+        $type == 'JPG' ||
+        $type == 'jpeg' ||
+        $type == 'JPEG' ||
+        $type == 'gif' ||
+        $type == 'GIF' ||
+        $type == 'image/jpeg' ||
+        $type == 'image/jpg' ||
+        $type == 'image/gif' ||
+        // $type == "application/octet-stream" ||
+        $type == 'image/png' ||
+        Str::startsWith($type, 'image')) {
         return 'image';
     }
 }
@@ -96,15 +96,15 @@ function deletePopUp($id, $url, $title = 'Delete', $class = 'btn btn-sm btn-dang
 {
     $button = '';
     if ($button_check == true) {
-        $button = '<a href="#delete" class="'.$class.'" data-toggle="modal" data-target="#delete'.$id.'">'.$btn_name.'</a>';
+        $button = '<a href="#delete" class="' . $class . '" data-toggle="modal" data-target="#delete' . $id . '">' . $btn_name . '</a>';
     }
 
-    return $button.'<div class="modal fade" id="delete'.$id.'">
+    return $button . '<div class="modal fade" id="delete' . $id . '">
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                <h4 class="modal-title">'.$title.'</h4>
+                                <h4 class="modal-title">' . $title . '</h4>
                             </div>
                             <div class="modal-body">
                                 <div class="row">
@@ -115,7 +115,7 @@ function deletePopUp($id, $url, $title = 'Delete', $class = 'btn btn-sm btn-dang
                             </div>
                             <div class="modal-footer">
                                 <button type="button" id="close" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
-                                <a href="'.$url.'" class="btn btn-danger">Delete</a>
+                                <a href="' . $url . '" class="btn btn-danger">Delete</a>
                             </div>
                         </div>
                     </div>
@@ -150,11 +150,11 @@ function faveotime($date, $hour = 0, $min = 0, $sec = 0)
 }
 
 /**
- * @category function to return array values if status id
- *
  * @param string purpose of status
  *
  * @return array ids of status with purpose passed as string
+ * @category function to return array values if status id
+ *
  */
 function getStatusArray($status)
 {
@@ -165,16 +165,20 @@ function getStatusArray($status)
 }
 
 /**
- * @category function to UTF encoding
- *
  * @param string name
  *
  * @return string name
+ * @category function to UTF encoding
+ *
  */
 function utfEncoding($name)
 {
     $title = '';
-    $array = imap_mime_header_decode($name);
+    try {
+        $array = imap_mime_header_decode($name);
+    } catch (\Exception $e) {
+        $array = [];
+    }
     if (is_array($array) && count($array) > 0) {
         foreach ($array as $text) {
             $title .= $text->text;
@@ -268,9 +272,9 @@ function successResponse($successMsg = '', $data = '', $responseCode = 200)
 function exceptionResponse(Exception $exception)
 {
     return errorResponse([
-        'file'        => $exception->getFile(),
+        'file' => $exception->getFile(),
         'line_number' => $exception->getLine(),
-        'exception'   => $exception->getMessage(),
+        'exception' => $exception->getMessage(),
     ], 500);
 }
 

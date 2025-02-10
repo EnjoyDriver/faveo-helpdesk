@@ -44,8 +44,8 @@ class Ticket_Thread extends Model
 
     public function purifyOld($value)
     {
-        require_once base_path('vendor'.DIRECTORY_SEPARATOR.'htmlpurifier'.DIRECTORY_SEPARATOR.'library'.DIRECTORY_SEPARATOR.'HTMLPurifier.auto.php');
-        $path = base_path('vendor'.DIRECTORY_SEPARATOR.'htmlpurifier'.DIRECTORY_SEPARATOR.'library'.DIRECTORY_SEPARATOR.'HTMLPurifier'.DIRECTORY_SEPARATOR.'DefinitionCache'.DIRECTORY_SEPARATOR.'Serializer');
+        require_once base_path('vendor' . DIRECTORY_SEPARATOR . 'htmlpurifier' . DIRECTORY_SEPARATOR . 'library' . DIRECTORY_SEPARATOR . 'HTMLPurifier.auto.php');
+        $path = base_path('vendor' . DIRECTORY_SEPARATOR . 'htmlpurifier' . DIRECTORY_SEPARATOR . 'library' . DIRECTORY_SEPARATOR . 'HTMLPurifier' . DIRECTORY_SEPARATOR . 'DefinitionCache' . DIRECTORY_SEPARATOR . 'Serializer');
         if (!File::exists($path)) {
             File::makeDirectory($path, $mode = 0777, true, true);
         }
@@ -121,7 +121,7 @@ class Ticket_Thread extends Model
             foreach ($attachments as $key => $attach) {
                 if ($attach->poster == 'INLINE' || $attach->poster == 'inline') {
                     $search = $attach->name;
-                    $replace = "data:$attach->type;base64,".$attach->file;
+                    $replace = "data:$attach->type;base64," . $attach->file;
                     $b = str_replace($search, $replace, $body);
                     $body = $b;
                 }
@@ -134,7 +134,11 @@ class Ticket_Thread extends Model
     public function getSubject()
     {
         $subject = strip_tags($this->attributes['title']);
-        $array = imap_mime_header_decode($subject);
+        try {
+            $array = imap_mime_header_decode($subject);
+        } catch (\Exception $e) {
+            $array = [];
+        }
         $title = '';
         if (is_array($array) && count($array) > 0) {
             foreach ($array as $text) {
