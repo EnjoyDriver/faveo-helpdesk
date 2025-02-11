@@ -178,10 +178,9 @@ class = "nav-item active"
                             $forms = App\Model\helpdesk\Form\Forms::get();
                             $helptopic = App\Model\helpdesk\Manage\Help_topic::where('status', '=', 1)->get();
 //                            ?><!---->
-                            <select name="helptopic" class="form-control" id="selectid">
-
+                            <select name="helptopic" class="form-control" id="selectid" value="{{ request()->get('topic_id') }}">
                                 @foreach($helptopic as $topic)
-                                <option value="{!! $topic->id !!}" {{ $topic->id == request()->get('topic_id') ? 'selected' : '' }}>{!! $topic->topic !!}</option>
+                                <option value="{!! $topic->id !!}" {{ $topic->id == request()->get('topic_id') ? 'selected' : '' }} >{!! $topic->topic !!}</option>
                                 @endforeach
                             </select>
                         </div>
