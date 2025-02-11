@@ -159,7 +159,7 @@ class = "nav-item active"
                              @if($email_mandatory->status == 0 || $email_mandatory->status == '0')
                                     <span class="text-red"> *</span>
                                     @endif
-                            {!! Form::text('mobile',null,['class' => 'form-control']) !!}
+                            {!! Form::text('mobile',request()->get('mobile'),['class' => 'form-control']) !!}
                         </div>
 {{--                        <div class="col-md-5 form-group {{ $errors->has('Phone') ? 'has-error' : '' }}">--}}
 {{--                            {!! Form::label('Phone',Lang::get('lang.phone')) !!}--}}
@@ -181,7 +181,7 @@ class = "nav-item active"
                             <select name="helptopic" class="form-control" id="selectid">
 
                                 @foreach($helptopic as $topic)
-                                <option value="{!! $topic->id !!}">{!! $topic->topic !!}</option>
+                                <option value="{!! $topic->id !!}" {{ $topic->id == request()->get('topic_id') ? 'selected' : '' }}>{!! $topic->topic !!}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -203,7 +203,7 @@ class = "nav-item active"
                                 </div>
                                 <div class="col-md-12">
                                     <?php $Priority = App\Model\helpdesk\Ticket\Ticket_Priority::where('status','=',1)->get(); ?>
-                                    {!! Form::select('priority', ['Priority'=>$Priority->pluck('priority_desc','priority_id')->toArray()],null,['class' => 'form-control select']) !!}
+                                    {!! Form::select('priority', ['Priority'=>$Priority->pluck('priority_desc','priority_id')->toArray()],request()->get('priority'),['class' => 'form-control select']) !!}
                                 </div>
                              </div>
                         </div>
@@ -212,11 +212,11 @@ class = "nav-item active"
                         @endif
                         <div class="col-md-12 form-group {{ $errors->has('Subject') ? 'has-error' : '' }}">
                             {!! Form::label('Subject',Lang::get('lang.subject')) !!}<span class="text-red"> *</span>
-                            {!! Form::text('Subject',null,['class' => 'form-control']) !!}
+                            {!! Form::text('Subject',request()->get('Subject'),['class' => 'form-control']) !!}
                         </div>
                         <div class="col-md-12 form-group {{ $errors->has('Details') ? 'has-error' : '' }}">
                             {!! Form::label('Details',Lang::get('lang.message')) !!}<span class="text-red"> *</span>
-                            {!! Form::textarea('Details',null,['class' => 'form-control']) !!}
+                            {!! Form::textarea('Details',request()->get('Details'),['class' => 'form-control']) !!}
                         </div>
                         <div class="col-md-12 form-group">
                             <input type="file" name="attachment[]" multiple/><br/>
