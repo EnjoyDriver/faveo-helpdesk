@@ -252,7 +252,7 @@ $(document).ready(function(){
    });
    function send(helpTopic){
        $.ajax({
-           url:"{{url('/get-helptopic-form')}}",
+           url:"{{url('/get-helptopic-form?'.request()->getQueryString())}}",
            data:{'helptopic':helpTopic},
            type:"GET",
            dataType:"html",
