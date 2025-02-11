@@ -54,9 +54,9 @@ class = "nav-item active"
                 <div>
                      {!! Form::open(['url' => 'checkmyticket' , 'method' => 'POST'] )!!}
                     {!! Form::label('email',Lang::get('lang.email')) !!}<span class="text-red"> *</span>
-                    {!! Form::text('email_address',null,['class' => 'form-control form-group']) !!}
+                    {!! Form::text('email_address',request()->get('email'),['class' => 'form-control form-group']) !!}
                     {!! Form::label('ticket_number',Lang::get('lang.ticket_number')) !!}<span class="text-red"> *</span>
-                    {!! Form::text('ticket_number',null,['class' => 'form-control form-group']) !!}
+                    {!! Form::text('ticket_number',request()->get('ticket_number'),['class' => 'form-control form-group']) !!}
                     <button type="submit" class="btn btn-info" style=" border-color: rgb(0, 192, 239); background-color: rgb(0, 154, 186) !important; color: white">
                         <i class="fas fa-save"></i> {!! Lang::get('lang.check_ticket_status') !!}
                     </button>
@@ -125,7 +125,7 @@ class = "nav-item active"
 
                         <div class="col-md-12 form-group {{ $errors->has('Name') ? 'has-error' : '' }}">
                             {!! Form::label('Name',Lang::get('lang.name')) !!}<span class="text-red"> *</span>
-                            {!! Form::text('Name',null,['class' => 'form-control']) !!}
+                            {!! Form::text('Name',request()->get('name'),['class' => 'form-control']) !!}
                         </div>
                         @endif
 
@@ -166,9 +166,9 @@ class = "nav-item active"
 {{--                            {!! Form::text('Phone',null,['class' => 'form-control']) !!}--}}
 {{--                        </div>--}}
                         @else
-                            {!! Form::hidden('mobile',Auth::user()->mobile,['class' => 'form-control']) !!}
-                            {!! Form::hidden('Code',Auth::user()->country_code,['class' => 'form-control']) !!}
-                            {!! Form::hidden('Phone',Auth::user()->phone_number,['class' => 'form-control']) !!}
+                            {!! Form::hidden('mobile',Auth::user()?->mobile ?? request()->get('mobile'),['class' => 'form-control']) !!}
+                            {!! Form::hidden('Code',Auth::user()?->country_code ?? request()->get('country_code'),['class' => 'form-control']) !!}
+                            {!! Form::hidden('Phone',Auth::user()?->phone_number ?? request()->get('phone_number'),['class' => 'form-control']) !!}
 
                        @endif
                         <div class="col-md-12 form-group {{ $errors->has('help_topic') ? 'has-error' : '' }}">

@@ -350,24 +350,24 @@ class FormController extends Controller
                 return self::selectForm($field_type, $field, $required, $required_class);
             case 'text':
                 return Form::label($field->label, $field->label, ['class' => $required_class]).
-                        Form::$field_type($field->name, null, ['class' => "form-control $field->id", 'id' => $field->id, 'required' => $required]);
+                        Form::$field_type($field->name,  \request()->get($field->name), ['class' => "form-control $field->id", 'id' => $field->id, 'required' => $required]);
             case 'email':
                 return Form::label($field->label, $field->label, ['class' => $required_class]).
-                        Form::$field_type($field->name, null, ['class' => "form-control $field->id", 'id' => $field->id, 'required' => $required]);
+                        Form::$field_type($field->name,  \request()->get($field->name), ['class' => "form-control $field->id", 'id' => $field->id, 'required' => $required]);
             case 'password':
                 return Form::label($field->label, $field->label, ['class' => $required_class]).
                         Form::$field_type($field->name, ['class' => "form-control $field->id", 'id' => $field->id, 'required' => $required]);
 
             case 'textarea':
                 return Form::label($field->label, $field->label, ['class' => $required_class]).
-                        Form::$field_type($field->name, null, ['class' => "form-control $field->id", 'id' => $field->id, 'required' => $required]);
+                        Form::$field_type($field->name,  \request()->get($field->name), ['class' => "form-control $field->id", 'id' => $field->id, 'required' => $required]);
             case 'radio':
                 return self::radioForm($field_type, $field, $required, $required_class);
 
             case 'checkbox':
                 return self::checkboxForm($field_type, $field, $required, $required_class);
             case 'hidden':
-                return Form::$field_type($field->name, null, ['id' => $field->id]);
+                return Form::$field_type($field->name, \request()->get($field->name), ['id' => $field->id]);
         }
     }
 
