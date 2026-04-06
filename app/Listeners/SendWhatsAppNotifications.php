@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Events\FaveoAfterReply;
+use App\Model\helpdesk\Ticket\Tickets;
 use App\Notifications\Messages\WhatsAppMessage;
 use App\Services\WhatsAppService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,9 +15,9 @@ class SendWhatsAppNotifications implements ShouldQueue
     ) {
     }
 
-    public function handleTicketCreated(array $data): void
+    public function handleTicketCreated(array|Tickets $data): void
     {
-        $ticket = $data['ticket'] ?? null;
+        $ticket = $data instanceof Tickets ? $data : $data['ticket'] ?? null;
         if (! $ticket) {
             return;
         }
