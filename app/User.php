@@ -7,12 +7,12 @@ use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject as AuthenticatableUserContract;
 
 class User extends Model implements AuthenticatableContract, CanResetPasswordContract, AuthenticatableUserContract
 {
-    use Authenticatable;
-    use CanResetPassword;
+    use Authenticatable, CanResetPassword, Notifiable;
 
     /**
      * The database table used by the model.
@@ -45,7 +45,7 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
         if ($info) {
             $pic = $this->checkArray('avatar', $info);
         }
-        if (!$pic && $value) {
+        if (! $pic && $value) {
             $pic = '';
             $file = public_path('uploads/profilepic/'.$value);
             if ($file && file_exists($file)) {
@@ -54,7 +54,7 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
                 $pic = 'data:image/'.$type.';base64,'.base64_encode($data);
             }
         }
-        if (!$value) {
+        if (! $value) {
             $pic = \Gravatar::src($this->attributes['email']);
         }
 
@@ -113,7 +113,7 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
 
     public function getEmailAttribute($value)
     {
-        if (!$value) {
+        if (! $value) {
             $value = \Lang::get('lang.not-available');
         }
 
@@ -224,5 +224,20 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
     public function getJWTCustomClaims()
     {
         return [];
+    }
+
+    public function routeNotificationForWhatsApp(): ?string
+    {
+        if ($this->mobile) {
+            $phone = preg_replace('/[^0-9]/', '', $this->mobile);
+            if ($this->country_code && ! str_starts_with($phone, $this->country_code)) {
+                $countryCode = preg_replace('/[^0-9]/', '', $this->country_code);
+                $phone = $countryCode.$phone;
+            }
+
+            return $phone;
+        }
+
+        return null;
     }
 }
