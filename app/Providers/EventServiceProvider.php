@@ -15,9 +15,9 @@ class EventServiceProvider extends ServiceProvider
         'App\Events\WorkFlowEvent' => [
             'App\Listeners\WorkFlowListen',
         ],
-        'after.ticket.created' => [
-            'App\Listeners\SendWhatsAppNotifications@handleTicketCreated',
-        ],
+//        'after.ticket.created' => [
+//            'App\Listeners\SendWhatsAppNotifications@handleTicketCreated',
+//        ],
         'App\Events\FaveoAfterReply' => [
             'App\Listeners\SendWhatsAppNotifications@handleTicketReply',
         ],

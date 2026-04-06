@@ -10,7 +10,6 @@ class WhatsAppService
     {
         $baseUrl = rtrim(config('whatsapp.base_url'), '/');
         $deviceId = $deviceId ?: config('whatsapp.device_id');
-
         try {
             $response = Http::timeout(10)
                 ->post("{$baseUrl}/whatsapp/send", [

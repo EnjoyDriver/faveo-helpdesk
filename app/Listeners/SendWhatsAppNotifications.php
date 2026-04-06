@@ -39,7 +39,7 @@ class SendWhatsAppNotifications implements ShouldQueue
     public function handleTicketReply(FaveoAfterReply $event): void
     {
         $thread = $event->para1 ?? null;
-        $ticket = $event->para2 ?? null;
+        $ticket = $event->para4 ?? $event->para2 ?? null;
         $user = $event->para3 ?? null;
 
         if (! $ticket || ! $user) {

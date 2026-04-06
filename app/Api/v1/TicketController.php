@@ -323,7 +323,8 @@ class TicketController extends Controller
             event(new \App\Events\FaveoAfterReply(
                 $reply_content,
                 $user->phone_number,
-                $request, $tickets
+                $request,
+                $tickets
             ));
 
 //             Mail::send(array('html' => 'emails.ticket_re-reply'), ['content' => $reply_content, 'ticket_number' => $ticket_number, 'From' => $company, 'name' => $username, 'Agent_Signature' => $agentsign], function ($message) use ($email, $user_name, $ticket_number, $ticket_subject, $check_attachment) {
