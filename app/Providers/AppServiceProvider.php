@@ -56,12 +56,16 @@ class AppServiceProvider extends ServiceProvider
 
     public function registerPlugin()
     {
-        $activePlugins = \DB::table('plugins')->select('name', 'path')->where('status', 1)->get();
-        foreach ($activePlugins as $activePlugin) {
-            if ($this->isPluginDir($activePlugin->name)) {
-                $class = '\App\Plugins\\'.$activePlugin->name.'\ServiceProvider';
-                $this->app->register($class);
+        try {
+            $activePlugins = \DB::table('plugins')->select('name', 'path')->where('status', 1)->get();
+            foreach ($activePlugins as $activePlugin) {
+                if ($this->isPluginDir($activePlugin->name)) {
+                    $class = '\App\Plugins\\'.$activePlugin->name.'\ServiceProvider';
+                    $this->app->register($class);
+                }
             }
+        } catch (\Exception $e) {
+            // Skip plugin loading if database is unavailable
         }
     }
 
