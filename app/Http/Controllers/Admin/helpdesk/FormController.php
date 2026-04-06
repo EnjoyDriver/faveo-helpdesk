@@ -225,55 +225,146 @@ class FormController extends Controller
         }
     }
 
-    public function update($id, Request $request)
-    {
-        $this->validate($request, [
-            'formname' => 'required|unique:custom_forms,formname,'.$id,
-            'label.*'  => 'required',
-            'name.*'   => 'required',
-            'type.*'   => 'required',
-        ]);
+    // public function update($id, Request $request)
+    // {
+    
+    //     $this->validate($request, [
+    //         'formname' => 'required|unique:custom_forms,formname,'.$id,
+    //         'label.*'  => 'required',
+    //         'name.*'   => 'required',
+    //         'type.*'   => 'required',
+    //     ]);
 
-        try {
-            if (!$request->input('formname')) {
-                throw new Exception(Lang::get('lang.please_fill_form_name'));
-            }
-            $form = new Forms();
-            $forms = $form->find($id);
-            if (!$forms) {
-                throw new Exception('Sorry we can not find your request');
-            }
-            $forms->formname = Input::get('formname');
-            $forms->save();
-            $count = count(Input::get('name'));
-            $field = new Fields();
-            $fields = $field->where('forms_id', $forms->id)->get();
-            if ($fields->count($fields) > 0) {
-                foreach ($fields as $fi) {
-                    $fi->delete();
+    //     try {
+    //         if (!$request->input('formname')) {
+    //             throw new Exception(Lang::get('lang.please_fill_form_name'));
+    //         }
+         
+    //         $form = new Forms();
+    //         $forms = $form->find($id);
+            
+    //         if (!$forms) {
+    //             throw new Exception('Sorry we can not find your request');
+    //         }
+          
+    //         $forms->formname = Input::get('formname');
+    //         $forms->save();
+          
+    //         $field = new Fields();
+    //         $fields = $field->where('forms_id', $forms->id)->get();
+          
+    //         if ($fields->count($fields) > 0) {
+    //             foreach ($fields as $fi) {
+    //                 $fi->delete();
+    //             }
+    //         }
+          
+    //         //dd(Input::get('label'),Input::get('name'),Input::get('type'),Input::get('required'));
+    //         if (Input::has('name')) {
+           
+    //             $count = count(Input::get('name'));
+    //             for ($i = 0; $i < $count; $i++) {
+    //                 $name = Str::slug(Input::get('name')[$i], '_');
+    //                 $field = $field->create([
+    //                     'forms_id' => $forms->id,
+    //                     'label'    => Input::get('label')[$i],
+    //                     'name'     => $name,
+    //                     'type'     => Input::get('type')[$i],
+    //                     'required' => Input::get('required')[$i],
+    //                 ]);
+    //                 $field_id = $field->id;
+    //                 $this->createValues($field_id, Input::get('value')[$i], null, $name);
+    //             }
+    //         }
+
+    //         return redirect()->back()->with('success', 'updated');
+    //     } catch (Exception $ex) {
+    //      // dd($ex);
+
+    //         return redirect()->back()->with('fails', $ex->getMessage());
+    //     }
+    // }
+
+
+        public function update($id, Request $request)
+        {
+            $this->validate($request, [
+                'formname' => 'required|unique:custom_forms,formname,'.$id,
+                'label.*'  => 'required',
+                'name.*'   => 'required',
+                'type.*'   => 'required',
+            ]);
+
+            try {
+                if (!$request->input('formname')) {
+                    throw new Exception(Lang::get('lang.please_fill_form_name'));
                 }
-            }
-            //dd(Input::get('label'),Input::get('name'),Input::get('type'),Input::get('required'));
-            for ($i = 0; $i < $count; $i++) {
-                $name = Str::slug(Input::get('name')[$i], '_');
-                $field = $field->create([
-                    'forms_id' => $forms->id,
-                    'label'    => Input::get('label')[$i],
-                    'name'     => $name,
-                    'type'     => Input::get('type')[$i],
-                    'required' => Input::get('required')[$i],
-                ]);
-                $field_id = $field->id;
-                $this->createValues($field_id, Input::get('value')[$i], null, $name);
-            }
+            
+                // Find the form
+                $form = Forms::findOrFail($id);
+                
+                // Update form name
+                $form->formname = $request->input('formname');
+                $form->save();
+            
+                // Get current field IDs to track deletions
+                $currentFieldIds = $form->fields()->pluck('id')->toArray();
+                $updatedFieldIds = [];
+                
+                // Check if fields were submitted (even empty array means delete all)
+                if ($request->has('name')) {
+                    // Get all input arrays
+                    $names = $request->input('name', []);
+                    $labels = $request->input('label', []);
+                    $types = $request->input('type', []);
+                    $required = $request->input('required', []);
+                    $values = $request->input('value', []);
+                    $fieldIds = $request->input('field_id', []);
+                    
+                    // Loop through each submitted field
+                    foreach ($names as $index => $name) {
+                        $sluggedName = Str::slug($name, '_');
+                        
+                        // Check if we have field_id for this index (existing field)
+                        if (!empty($fieldIds[$index])) {
+                            $field = Fields::find($fieldIds[$index]);
+                            if ($field) {
+                                $field->update([
+                                    'label' => $labels[$index] ?? '',
+                                    'name' => $sluggedName,
+                                    'type' => $types[$index] ?? 'text',
+                                    'required' => $required[$index] ?? 0,
+                                ]);
+                                $updatedFieldIds[] = $field->id;
+                                $this->updateValues($field->id, $values[$index] ?? null, null, $sluggedName);
+                            }
+                        } else {
+                            // Create new field
+                            $field = Fields::create([
+                                'forms_id' => $form->id,
+                                'label' => $labels[$index] ?? '',
+                                'name' => $sluggedName,
+                                'type' => $types[$index] ?? 'text',
+                                'required' => $required[$index] ?? 0,
+                            ]);
+                            $updatedFieldIds[] = $field->id;
+                            $this->createValues($field->id, $values[$index] ?? null, null, $sluggedName);
+                        }
+                    }
+                }
+                
+                // Always check for fields to delete (handles case when all fields were removed)
+                $fieldsToDelete = array_diff($currentFieldIds, $updatedFieldIds);
+                if (!empty($fieldsToDelete)) {
+                    Fields::whereIn('id', $fieldsToDelete)->delete();
+                    // Optionally delete associated values here if needed
+                }
 
-            return redirect()->back()->with('success', 'updated');
-        } catch (Exception $ex) {
-            dd($ex);
-
-            return redirect()->back()->with('fails', $ex->getMessage());
+                return redirect()->back()->with('success', 'Form updated successfully');
+            } catch (Exception $ex) {
+                return redirect()->back()->with('fails', $ex->getMessage());
+            }
         }
-    }
 
     public function renderForm($formid)
     {

@@ -555,20 +555,42 @@ class TicketController extends Controller
         return $number;
     }
 
-    public function getNumber($ticket_number, $type, $format, $check = true)
-    {
-        $force = false;
-        if ($check === false) {
-            $force = true;
-        }
-        $controller = new \App\Http\Controllers\Admin\helpdesk\SettingsController();
-        if ($ticket_number) {
-            $number = $controller->nthTicketNumber($ticket_number, $type, $format, $force);
-        } else {
-            $number = $controller->switchNumber($format, $type);
-        }
-        $number = $this->generateTicketIfExist($number, $type, $format);
+    // public function getNumber($ticket_number, $type, $format, $check = true)
+    // {
+    //     $force = false;
+    //     if ($check === false) {
+    //         $force = true;
+    //     }
+    //     $controller = new \App\Http\Controllers\Admin\helpdesk\SettingsController();
+    //     if ($ticket_number) {
+    //         $number = $controller->nthTicketNumber($ticket_number, $type, $format, $force);
+    //     } else {
+    //         $number = $controller->switchNumber($format, $type);
+    //     }
+    //     $number = $this->generateTicketIfExist($number, $type, $format);
 
+    //     return $number;
+    // }
+
+    public function getNumber($ticket_number, $type, $format, $attempts = 0)
+    {
+        $maxAttempts = 10; // Prevent infinite loops
+        $controller = new \App\Http\Controllers\Admin\helpdesk\SettingsController();
+        
+        // Generate number
+        $number = $ticket_number 
+            ? $controller->nthTicketNumber($ticket_number, $type, $format, true)
+            : $controller->switchNumber($format, $type);
+   
+        // Check for duplicates
+        if (Tickets::where('ticket_number', $number)->exists()) {
+            if ($attempts >= $maxAttempts) {
+                throw new \RuntimeException("Failed to generate unique ticket number after {$maxAttempts} attempts");
+            }
+            Log::warning("Duplicate ticket number generated: {$number}");
+            return $this->getNumber($number, $type, $format, $attempts + 1);
+        }
+        
         return $number;
     }
 
