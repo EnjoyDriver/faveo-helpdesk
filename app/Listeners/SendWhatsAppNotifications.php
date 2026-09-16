@@ -3,12 +3,19 @@
 namespace App\Listeners;
 
 use App\Events\FaveoAfterReply;
+use App\Model\helpdesk\Ticket\Ticket_Thread;
 use App\Model\helpdesk\Ticket\Tickets;
 use App\Notifications\Messages\WhatsAppMessage;
 use App\Services\WhatsAppService;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
-class SendWhatsAppNotifications implements ShouldQueue
+/**
+ * Deliberately NOT ShouldQueue: queueing a listener makes Laravel serialize the
+ * event before running it, even on the sync driver, and FaveoAfterReply carries
+ * the live Request object -- which holds closures and throws "Serialization of
+ * 'Closure' is not allowed". That breaks the whole listener chain for a reply,
+ * including the platform sync, and no try/catch inside a handler can catch it.
+ */
+class SendWhatsAppNotifications
 {
     public function __construct(
         protected WhatsAppService $whatsAppService
@@ -38,21 +45,50 @@ class SendWhatsAppNotifications implements ShouldQueue
 
     public function handleTicketReply(FaveoAfterReply $event): void
     {
-        $thread = $event->para1 ?? null;
-        $ticket = $event->para4 ?? $event->para2 ?? null;
-        $user = $event->para3 ?? null;
+        /*
+         * The two places that fire this event disagree on the argument order:
+         * the agent controller passes (content, mobile, country_code, request,
+         * ticket, thread) while the v1 API passes (content, phone, request,
+         * ticket). Reading fixed positions picked up country_code as the user
+         * on the agent path and fataled on it, which also stopped every
+         * listener registered after this one -- so resolve each by type.
+         */
+        try {
+            $ticket = $this->firstOfType($event, Tickets::class);
+            $user = $ticket ? $this->getTicketOwner($ticket) : null;
 
-        if (! $ticket || ! $user) {
-            return;
+            if (! $ticket || ! $user) {
+                return;
+            }
+
+            $thread = $this->firstOfType($event, Ticket_Thread::class) ?? $event->para1;
+
+            $phone = $user->routeNotificationForWhatsApp();
+            if (! $phone) {
+                return;
+            }
+
+            $message = $this->buildTicketRepliedMessage($ticket, $thread);
+            $this->whatsAppService->send($phone, $message);
+        } catch (\Exception $e) {
+            /*
+             * A notification is not worth losing a reply over: listeners run in
+             * a chain, so anything thrown here would stop the ones after it.
+             */
+            \Log::error('whatsapp reply notification failed: '.$e->getMessage());
+        }
+    }
+
+    /** Resolve an event argument by type rather than by position. */
+    protected function firstOfType(FaveoAfterReply $event, string $class)
+    {
+        foreach ([$event->para1, $event->para2, $event->para3, $event->para4, $event->para5, $event->para6] as $para) {
+            if ($para instanceof $class) {
+                return $para;
+            }
         }
 
-        $phone = $user->routeNotificationForWhatsApp();
-        if (! $phone) {
-            return;
-        }
-
-        $message = $this->buildTicketRepliedMessage($ticket, $thread);
-        $this->whatsAppService->send($phone, $message);
+        return null;
     }
 
     protected function buildTicketCreatedMessage($ticket, $user): string

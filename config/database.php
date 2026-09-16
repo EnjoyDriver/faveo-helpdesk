@@ -98,6 +98,27 @@ return [
             'sslmode'        => 'prefer',
         ],
 
+        /*
+         * The main Enjoy Driving platform database (PostgreSQL). Faveo itself
+         * runs on MySQL; this read-only connection exists so the client ticket
+         * form can prefill a customer's name and phone from their platform
+         * account. Kept under its own MAIN_DB_* vars so it never collides with
+         * Faveo's DB_* configuration.
+         */
+        'main_platform' => [
+            'driver'         => 'pgsql',
+            'host'           => env('MAIN_DB_HOST', 'postgis'),
+            'port'           => env('MAIN_DB_PORT', '5432'),
+            'database'       => env('MAIN_DB_DATABASE', 'enjoy_stag_usr'),
+            'username'       => env('MAIN_DB_USERNAME', 'enjoy_stag_usr'),
+            'password'       => env('MAIN_DB_PASSWORD', ''),
+            'charset'        => 'utf8',
+            'prefix'         => '',
+            'prefix_indexes' => true,
+            'search_path'    => env('MAIN_DB_SCHEMA', 'main'),
+            'sslmode'        => 'prefer',
+        ],
+
         'sqlsrv' => [
             'driver'         => 'sqlsrv',
             'url'            => env('DATABASE_URL'),

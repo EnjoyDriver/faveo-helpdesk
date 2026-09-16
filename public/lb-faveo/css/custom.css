@@ -283,3 +283,320 @@ ul.dropdown-menu a.dropdown-item.active{
         display: none;
     }
 }
+
+
+/* Moved out of the client layout's inline <style>, which sat between
+   two closing divs and made the broken nesting there hard to see. */
+.site-search .search-field {
+    border-radius: 10px;
+}
+
+
+/* ------------------------------------------------------------------
+   Mobile client theme
+   The client area is used overwhelmingly from phones. The desktop
+   header stacks a tall logo, the nav toggle and a full-width search
+   card, which pushed the actual form well below the fold. These rules
+   compact it. Loaded after app.3.0.css so they win on specificity.
+   ------------------------------------------------------------------ */
+
+@media (max-width: 991.98px) {
+
+    /* --- Header ------------------------------------------------- */
+
+    /* Was 30px top and bottom on top of the nav's own spacing. */
+    .site-header {
+        padding: 10px 0 0;
+    }
+
+    /* Logo and the nav toggle share one row, vertically centred,
+       instead of the logo taking a full centred row of its own. */
+    #navbar.site-navigation {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0;
+        margin-bottom: 0;
+    }
+
+    #logo.site-logo {
+        min-height: 0;
+        line-height: 1;
+        margin: 0;
+        padding: 0;
+        text-align: left;
+        flex: 0 1 auto;
+    }
+
+    /* The markup asks for 200x200; cap it to something sane on a
+       phone and keep the aspect ratio. */
+    .site-logo-img {
+        width: auto;
+        height: 56px;
+        max-width: 160px;
+        object-fit: contain;
+    }
+
+    .navbar-toggler {
+        margin: 0;
+        padding: 6px 10px;
+        flex: 0 0 auto;
+    }
+
+    /* Nav panel drops below the logo row when opened. */
+    #navbarSupportedContent {
+        flex-basis: 100%;
+        order: 3;
+    }
+
+    /* --- Header search ------------------------------------------ */
+
+    /* Sits directly under the logo row rather than being absolutely
+       positioned against the desktop header. */
+    .site-search {
+        clear: both;
+        margin-top: 10px;
+    }
+    .site-search .search-form {
+        position: static;
+        left: 0;
+        width: 100%;
+    }
+    .site-search .form-border {
+        position: static;
+        width: 100%;
+        margin: 0;
+        top: auto;
+        left: 0;
+        padding: 8px;
+        border: 1px solid #eee;
+    }
+    .site-search .form-inline {
+        display: block;
+    }
+    .site-search .form-group.input-group {
+        width: 100%;
+        display: block;
+    }
+    .site-search .search-field {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+    .site-search .input-group-btn {
+        display: block;
+        width: 100%;
+    }
+    .site-search .input-group-btn .btn {
+        width: 100%;
+        margin-left: 0 !important;
+    }
+
+    /* --- Hero / breadcrumb -------------------------------------- */
+
+    /* 35px of teal band above and below the breadcrumb is a lot of
+       screen for one line of text. */
+    .site-hero {
+        padding: 12px 0;
+        min-height: 0;
+    }
+    .breadcrumb {
+        margin-left: 0 !important;
+        margin-top: 0 !important;
+        padding-left: 0 !important;
+        flex-wrap: wrap;
+    }
+
+    /* --- Content ------------------------------------------------- */
+
+    .site-main .content-area {
+        padding: 15px;
+    }
+
+    #sidebar.site-sidebar {
+        margin-top: 20px;
+    }
+}
+
+@media (max-width: 767px) {
+
+    /* iOS zooms the page when a focused input is under 16px; that
+       zoom is what makes the form feel broken on iPhones. */
+    .form-control,
+    select.form-control,
+    textarea.form-control,
+    .note-editor .note-editable {
+        font-size: 16px;
+    }
+
+    /* Comfortable tap targets. */
+    .form-control {
+        min-height: 44px;
+    }
+    .btn {
+        min-height: 44px;
+        padding: 10px 16px;
+    }
+
+    .submit-ticket-btn {
+        float: none !important;
+        display: block;
+        width: 100%;
+        margin-top: 15px;
+    }
+
+    /* Keep the editor chrome inside the card. */
+    .note-editor.note-frame {
+        max-width: 100%;
+    }
+    .note-editor .note-toolbar {
+        flex-wrap: wrap;
+    }
+    .note-editor .note-btn {
+        padding: 6px 9px;
+    }
+
+    input[type="file"] {
+        max-width: 100%;
+    }
+
+    .site-info,
+    .site-social {
+        text-align: center !important;
+    }
+    .site-social ul.list-inline {
+        float: none !important;
+        justify-content: center;
+    }
+}
+
+/* Hero band with no breadcrumb in it: keep the teal strip that the
+   content card's rounded corners sit against, but don't reserve
+   vertical space for text that isn't there. */
+/* Hero band with no breadcrumb in it. Only collapse this below the lg
+   breakpoint: on desktop the search bar is absolutely positioned and
+   pulled up by -35px into this band, so the band's height is load
+   bearing there and removing it clips the search form. */
+@media (max-width: 991.98px) {
+    .site-hero.site-hero-empty {
+        padding: 0;
+        min-height: 0;
+        background: none;
+    }
+
+    /* .site-main is pulled up 35px so the content card overlaps the
+       teal band. With no band, that pull would drag the card under the
+       header and the band's edges would show either side of it. */
+    .site-hero.site-hero-empty + .site-main,
+    .site-hero.site-hero-empty + #main.site-main {
+        margin-top: 0;
+    }
+}
+
+/* Ticket attachments: replace the bare browser file input with a
+   click/drop target that matches the form's other controls. The real
+   input stays in the DOM (so the form still posts attachment[]) but is
+   visually hidden and driven by its label. */
+.ticket-attachments {
+    margin: 18px 0 22px;
+}
+
+.ticket-attachments-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.ticket-attachments-drop {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    margin: 0;
+    padding: 16px 18px;
+    font-weight: 400;
+    cursor: pointer;
+    background-color: #fafbfc;
+    border: 1px dashed #c6ccd3;
+    border-radius: 10px;
+    transition: border-color .15s ease, background-color .15s ease;
+}
+
+.ticket-attachments-drop:hover,
+.ticket-attachments-input:focus + .ticket-attachments-drop,
+.ticket-attachments.is-dragover .ticket-attachments-drop {
+    background-color: #f2f5f8;
+    border-color: #1E2A38;
+}
+
+.ticket-attachments-icon {
+    flex: 0 0 auto;
+    font-size: 18px;
+    color: #1E2A38;
+}
+
+.ticket-attachments-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.ticket-attachments-action {
+    font-weight: 600;
+    color: #1E2A38;
+}
+
+.ticket-attachments-hint {
+    font-size: 12px;
+    color: #7b8794;
+}
+
+/* Chosen files, listed under the drop target. */
+.ticket-attachments-list {
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.ticket-attachments-list:empty {
+    margin-top: 0;
+}
+
+.ticket-attachments-list li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 12px;
+    font-size: 13px;
+    color: #3d4852;
+    background-color: #f4f6f8;
+    border-radius: 6px;
+}
+
+.ticket-attachments-list li + li {
+    margin-top: 6px;
+}
+
+.ticket-attachments-list .file-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ticket-attachments-list .file-size {
+    flex: 0 0 auto;
+    color: #7b8794;
+}
+
+/* Breathing room around the submit button below the upload block. */
+.submit-ticket-btn {
+    margin-top: 8px;
+    margin-bottom: 10px;
+}

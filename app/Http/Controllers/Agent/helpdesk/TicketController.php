@@ -1001,6 +1001,43 @@ class TicketController extends Controller
      * @param  type  $priority
      * @return type string
      */
+    /**
+     * The role the customer was last signed in as on the main platform
+     * ('user', 'captain' or 'delegate').
+     *
+     * One platform account can act as more than one role, so a ticket records
+     * which it was raised under and the app can filter on it. Helpdesk and
+     * platform accounts are matched on email, the only identifier both sides
+     * share. Falls back to 'user' when there is no platform account or the
+     * platform database cannot be reached, matching the backfill applied to
+     * tickets that predate this column.
+     *
+     * @param  int  $user_id
+     * @return string
+     */
+    protected function platformLoginAs($user_id)
+    {
+        try {
+            $email = User::where('id', '=', $user_id)->value('email');
+
+            if (! $email) {
+                return 'user';
+            }
+
+            $loginAs = \DB::connection('main_platform')
+                    ->table('users')
+                    ->where('email', '=', $email)
+                    ->value('last_login_as');
+
+            // Platform accounts that have never signed in leave this null.
+            return $loginAs ?: 'user';
+        } catch (\Exception $e) {
+            \Log::warning('Ticket login_as lookup failed: '.$e->getMessage());
+
+            return 'user';
+        }
+    }
+
     public function createTicket($user_id, $subject, $body, $helptopic, $sla, $priority, $source, $headers, $dept, $assignto, $form_data, $status, $duedate = null)
     {
         $ticket_number = '';
@@ -1014,6 +1051,7 @@ class TicketController extends Controller
         $ticket = new Tickets();
         $ticket->ticket_number = $this->ticketNumber($ticket_number);
         $ticket->user_id = $user_id;
+        $ticket->login_as = $this->platformLoginAs($user_id);
         $ticket->dept_id = $dept;
         $ticket->help_topic_id = $helptopic;
         $ticket->sla = $sla;

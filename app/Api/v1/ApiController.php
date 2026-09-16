@@ -563,7 +563,14 @@ class ApiController extends Controller
                 return response()->json(compact('error'));
             }
             $search = $this->request->input('search');
-            $result = $this->faveoUser->where('first_name', 'like', '%'.$search.'%')->orWhere('last_name', 'like', '%'.$search.'%')->orWhere('user_name', 'like', '%'.$search.'%')->orWhere('email', 'like', '%'.$search.'%')->get();
+
+            /*
+             * Exact email match only. The email column is unique, so this is an
+             * index seek rather than the full table scan a leading-wildcard
+             * LIKE forces. Note that partial and name searches no longer match:
+             * callers must pass a complete email address.
+             */
+            $result = $this->faveoUser->where('email', '=', $search)->get();
 
             return response()->json(compact('result'))
                             ->header('X-Header-One', 'Header Value');
@@ -955,7 +962,37 @@ class ApiController extends Controller
     public function getTickets()
     {
         try {
-            $tickets = $this->model->orderBy('created_at', 'desc')->paginate(10);
+            /*
+             * The bare `tickets` row carries no subject, body or topic name:
+             * the subject and message live on the first ticket_thread row and
+             * the topic name on help_topic. Consumers listing tickets need all
+             * three, so they are selected alongside the ticket's own columns.
+             *
+             * Left joins throughout, and a subquery for the thread, so a ticket
+             * is never dropped from the list because its help topic was deleted
+             * or its thread is missing.
+             */
+            $firstThread = \DB::table('ticket_thread')
+                    ->select('ticket_id', \DB::raw('MIN(id) as id'))
+                    ->whereNotNull('title')
+                    ->groupBy('ticket_id');
+
+            $tickets = $this->model
+                    ->leftJoinSub($firstThread, 'first_thread', function ($join) {
+                        $join->on('tickets.id', '=', 'first_thread.ticket_id');
+                    })
+                    ->leftJoin('ticket_thread', 'ticket_thread.id', '=', 'first_thread.id')
+                    ->leftJoin('help_topic', 'help_topic.id', '=', 'tickets.help_topic_id')
+                    ->leftJoin('ticket_status', 'ticket_status.id', '=', 'tickets.status')
+                    ->select(
+                        'tickets.*',
+                        'ticket_thread.title as title',
+                        'ticket_thread.body as body',
+                        'help_topic.topic as helptopic_name',
+                        'ticket_status.name as status_name'
+                    )
+                    ->orderBy('tickets.created_at', 'desc')
+                    ->paginate(10);
             $tickets->toJson();
 
             return $tickets;
@@ -1194,11 +1231,14 @@ class ApiController extends Controller
                 return response()->json(compact('error'));
             }
             $id = $this->request->input('user_id');
-            if ($this->user->where('id', $id)->first()->role == 'admin' || $this->user->where('id', $id)->first()->role == 'agent') {
-                $error = 'This is not a client';
-
-                return response()->json(compact('error'));
-            }
+            /*
+             * Tickets are returned for whoever owns them, whatever their role.
+             * Staff accounts raise tickets through the client form too (and the
+             * mobile app asks for them by user_id), so rejecting admins and
+             * agents here just hid their own tickets from them. The query below
+             * is already scoped to tickets.user_id, so this stays limited to
+             * the requested user's own tickets.
+             */
             $user = User::where('users.id', $id)
                                             ->leftJoin('user_assign_organization', 'users.id', '=', 'user_assign_organization.user_id')
                                             ->leftJoin('organization', 'user_assign_organization.org_id', '=', 'organization.id')

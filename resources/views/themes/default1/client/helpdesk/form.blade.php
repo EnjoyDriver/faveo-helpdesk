@@ -9,11 +9,11 @@ class = "nav-item active"
 @stop
 <!-- breadcrumbs -->
 @section('breadcrumb')
-{{--<div class="site-hero clearfix">--}}
+{{-- Breadcrumb removed on this page. Restore by uncommenting below.
     <ol class="breadcrumb float-sm-right ">
         <style>
             .words {
-                margin-right: 10px; /* Adjust the value to increase or decrease the gap between list items */
+                margin-right: 10px;
             }
         </style>
         <li class="breadcrumb-item"> <i class="fas fa-home"> </i> {!! Lang::get('lang.you_are_here') !!} : &nbsp;</li>
@@ -22,7 +22,7 @@ class = "nav-item active"
 
         <li><a href="{!! URL::route('form') !!}">{!! Lang::get('lang.submit_a_ticket') !!}</a></li>
     </ol>
-</div>
+--}}
 @stop
 <!-- /breadcrumbs -->
 @section('check')
@@ -57,7 +57,7 @@ class = "nav-item active"
                     {!! Form::text('email_address',request()->get('email'),['class' => 'form-control form-group']) !!}
                     {!! Form::label('ticket_number',Lang::get('lang.ticket_number')) !!}<span class="text-red"> *</span>
                     {!! Form::text('ticket_number',request()->get('ticket_number'),['class' => 'form-control form-group']) !!}
-                    <button type="submit" class="btn btn-info" style=" border-color: rgb(0, 192, 239); background-color: rgb(0, 154, 186) !important; color: white">
+                    <button type="submit" class="btn btn-info submit-ticket-btn" style="border-color: #1E2A38; background-color: #1E2A38 !important; color: white">
                         <i class="fas fa-save"></i> {!! Lang::get('lang.check_ticket_status') !!}
                     </button>
                     {!! Form::close() !!}
@@ -125,7 +125,7 @@ class = "nav-item active"
 
                         <div class="col-md-12 form-group {{ $errors->has('Name') ? 'has-error' : '' }}">
                             {!! Form::label('Name',Lang::get('lang.name')) !!}<span class="text-red"> *</span>
-                            {!! Form::text('Name',request()->get('name'),['class' => 'form-control']) !!}
+                            {!! Form::text('Name',request()->get('name') ?? ($platformUser->name ?? null) ?? Auth::user()?->name(),['class' => 'form-control']) !!}
                         </div>
                         @endif
 
@@ -146,20 +146,20 @@ class = "nav-item active"
 
                         @if(!Auth::user())
 
-                        <div class="col-md-2 form-group {{ Session::has('country_code_error') ? 'has-error' : '' }}">
+                        <div class="col-4 col-md-2 form-group {{ Session::has('country_code_error') ? 'has-error' : '' }}">
                             {!! Form::label('Code',Lang::get('lang.country-code')) !!}
                              @if($email_mandatory->status == 0 || $email_mandatory->status == '0')
                                     <span class="text-red"> *</span>
                                     @endif
 
-                            {!! Form::text('Code',$phonecode,['class' => 'form-control', 'placeholder' => $phonecode, 'title' => Lang::get('lang.enter-country-phone-code')]) !!}
+                            {!! Form::text('Code',isset($platformUser->country_key) ? ltrim($platformUser->country_key,'+') : $phonecode,['class' => 'form-control', 'placeholder' => $phonecode, 'title' => Lang::get('lang.enter-country-phone-code'), 'inputmode' => 'tel']) !!}
                         </div>
-                        <div class="col-md-5 form-group {{ $errors->has('mobile') ? 'has-error' : '' }}">
+                        <div class="col-8 col-md-5 form-group {{ $errors->has('mobile') ? 'has-error' : '' }}">
                             {!! Form::label('mobile',Lang::get('lang.mobile_number')) !!}
                              @if($email_mandatory->status == 0 || $email_mandatory->status == '0')
                                     <span class="text-red"> *</span>
                                     @endif
-                            {!! Form::text('mobile',request()->get('mobile'),['class' => 'form-control']) !!}
+                            {!! Form::text('mobile',request()->get('mobile') ?? ($platformUser->phone ?? null) ?? Auth::user()?->mobile,['class' => 'form-control', 'inputmode' => 'tel']) !!}
                         </div>
 {{--                        <div class="col-md-5 form-group {{ $errors->has('Phone') ? 'has-error' : '' }}">--}}
 {{--                            {!! Form::label('Phone',Lang::get('lang.phone')) !!}--}}
@@ -196,15 +196,9 @@ class = "nav-item active"
                         @if($user_Priority == 1)
 
                         <div class="col-md-12 form-group">
-                            <div class="row">
-                                <div class="col-md-1">
-                                    <label>{!! Lang::get('lang.priority') !!}:</label>
-                                </div>
-                                <div class="col-md-12">
-                                    <?php $Priority = App\Model\helpdesk\Ticket\Ticket_Priority::where('status','=',1)->get(); ?>
-                                    {!! Form::select('priority', ['Priority'=>$Priority->pluck('priority_desc','priority_id')->toArray()],request()->get('priority'),['class' => 'form-control select']) !!}
-                                </div>
-                             </div>
+                            <label>{!! Lang::get('lang.priority') !!}:</label>
+                            <?php $Priority = App\Model\helpdesk\Ticket\Ticket_Priority::where('status','=',1)->get(); ?>
+                            {!! Form::select('priority', ['Priority'=>$Priority->pluck('priority_desc','priority_id')->toArray()],request()->get('priority'),['class' => 'form-control select']) !!}
                         </div>
                         @endif
                         @endif
@@ -218,24 +212,31 @@ class = "nav-item active"
                             {!! Form::textarea('Details',request()->get('Details'),['class' => 'form-control']) !!}
                         </div>
                         <div class="col-md-12 form-group">
-                            <input type="file" name="attachment[]" multiple/><br/>
-                            {!! Lang::get('lang.max') !!}. {!! $max_size_in_actual !!}
+                            <div class="ticket-attachments">
+                                <input type="file" id="ticket-attachment-input" name="attachment[]" multiple class="ticket-attachments-input"/>
+                                <label for="ticket-attachment-input" class="ticket-attachments-drop">
+                                    <i class="fas fa-paperclip ticket-attachments-icon"></i>
+                                    <span class="ticket-attachments-text">
+                                        <span class="ticket-attachments-action">{!! Lang::get('lang.attachments') !!}</span>
+                                        <span class="ticket-attachments-hint">{!! Lang::get('lang.max') !!}. {!! $max_size_in_actual !!}</span>
+                                    </span>
+                                </label>
+                                <ul class="ticket-attachments-list" id="ticket-attachment-list"></ul>
+                            </div>
                         </div>
                         {{-- Event fire --}}
                         <?php \Illuminate\Support\Facades\Event::dispatch(new App\Events\ClientTicketForm()); ?>
                         <div class="col-md-12" id="response"> </div>
-                        <div id="ss" class="xs-md-6 form-group {{ $errors->has('') ? 'has-error' : '' }}"> </div>
+                        <div id="ss" class="col-md-12 form-group {{ $errors->has('') ? 'has-error' : '' }}"> </div>
                                 <div class="col-md-12 form-group">
-                                    {!! Form::button('<i class="fas fa-save"></i> ' . Lang::get('lang.submit'), ['type'=>'submit', 'class'=>'btn btn-info float-right', 'style'=>'style="border-color: rgb(0, 192, 239); background-color: rgb(0, 154, 186); color: white;', 'onclick' => 'this.disabled=true;this.innerHTML="Sending, please wait...";this.form.submit();', 'data-v-fce8d630']) !!}
+                                    {!! Form::button('<i class="fas fa-save"></i> ' . Lang::get('lang.submit'), ['type'=>'submit', 'class'=>'btn btn-info float-right submit-ticket-btn', 'style'=>'border-color: #1E2A38; background-color: #1E2A38; color: white;', 'data-v-fce8d630']) !!}
                                 </div>
-                            <div class="col-md-12" id="response"> </div>
-                        <div id="ss" class="xs-md-6 form-group {{ $errors->has('') ? 'has-error' : '' }}"> </div>
 
-                    {!! Form::close() !!}
                     </div>
-                </section>    
+                </section>
             </div>
         </article>
+        {!! Form::close() !!}
     </div>
 <!--
 |====================================================
@@ -244,6 +245,14 @@ class = "nav-item active"
 -->
 <script type="text/javascript">
 $(document).ready(function(){
+   // Creating a ticket can take ~10s, so show progress and block double submits.
+   // Bound to submit (not click) so the browser validates required fields first.
+   $(".submit-ticket-btn").closest("form").on("submit", function(){
+       $(this).find(".submit-ticket-btn")
+              .prop("disabled", true)
+              .html('<i class="fas fa-spinner fa-spin"></i> {{ Lang::get("lang.loading") }}');
+   });
+
    var helpTopic = $("#selectid").val();
    send(helpTopic);
    $("#selectid").on("change",function(){
@@ -267,19 +276,71 @@ $(document).ready(function(){
 });
 
 $(function() {
-//Add text editor
-    $("textarea").summernote({
-        height: 300,
-        tabsize: 2,
-        toolbar: [
+//Add text editor - trim the toolbar on small screens so it does not
+//swallow the form on phones, where most tickets are submitted from.
+    var isMobile = window.matchMedia("(max-width: 767px)").matches;
+
+    var mobileToolbar = [
+        ['style', ['bold', 'italic', 'underline', 'clear']],
+        ['para', ['ul', 'ol']]
+    ];
+
+    var desktopToolbar = [
         ['style', ['bold', 'italic', 'underline', 'clear']],
         ['font', ['strikethrough', 'superscript', 'subscript']],
         ['fontsize', ['fontsize']],
         ['color', ['color']],
         ['para', ['ul', 'ol', 'paragraph']],
         ['height', ['height']]
-      ]
+    ];
+
+    $("textarea").summernote({
+        height: isMobile ? 180 : 300,
+        tabsize: 2,
+        toolbar: isMobile ? mobileToolbar : desktopToolbar
       });
+
+    // Attachments: list the chosen files and accept drops on the label.
+    var $input = $('#ticket-attachment-input'),
+        $list = $('#ticket-attachment-list'),
+        $box = $input.closest('.ticket-attachments');
+
+    function formatSize(bytes) {
+        if (bytes < 1024) { return bytes + ' B'; }
+        if (bytes < 1048576) { return Math.round(bytes / 1024) + ' KB'; }
+        return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    function renderFiles() {
+        var files = $input[0].files;
+        $list.empty();
+        for (var i = 0; i < files.length; i++) {
+            $('<li/>')
+                .append($('<span class="file-name"/>').text(files[i].name))
+                .append($('<span class="file-size"/>').text(formatSize(files[i].size)))
+                .appendTo($list);
+        }
+    }
+
+    $input.on('change', renderFiles);
+
+    $box.on('dragover dragenter', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $box.addClass('is-dragover');
+    }).on('dragleave dragend drop', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $box.removeClass('is-dragover');
+    }).on('drop', function (e) {
+        var dropped = e.originalEvent.dataTransfer;
+        // DataTransfer assignment needs a modern browser; without it the
+        // label still opens the file picker as before.
+        if (dropped && dropped.files.length && window.DataTransfer) {
+            $input[0].files = dropped.files;
+            renderFiles();
+        }
+    });
 });
 </script>
 @stop

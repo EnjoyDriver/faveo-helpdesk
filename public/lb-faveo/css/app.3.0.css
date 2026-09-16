@@ -775,11 +775,6 @@ ol.with-line-border > li {
 
 .site-search .search-form {
     position: relative;
-    -webkit-box-sizing: content-box;
-    -moz-box-sizing: content-box;
-    box-sizing: content-box;
-
-    left: 3%;
 }
 .site-search .form-border {
     width: 100%;
@@ -1280,7 +1275,7 @@ ol.with-line-border > li {
 /*	8.0 - Media Queries
 /*-----------------------------------------------------------------------------------*/
 
-@media (min-width: 99FR2px) {
+@media (min-width: 992px) {
     #logo {
         float: left;
         margin-bottom: 0;
@@ -1300,7 +1295,7 @@ ol.with-line-border > li {
     }
     .breadcrumb {
         width: 80%;
-       margin: 20px,20%;
+        margin: 20px auto;
     }
     .comment-form textarea {
         height: 182px;

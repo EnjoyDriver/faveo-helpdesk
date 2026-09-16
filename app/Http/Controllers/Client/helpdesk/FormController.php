@@ -84,9 +84,42 @@ class FormController extends Controller
 
             [$max_size_in_bytes, $max_size_in_actual] = $this->fileUploadController->file_upload_max_size();
 
-            return view('themes.default1.client.helpdesk.form', compact('topics', 'codes', 'email_mandatory', 'max_size_in_bytes', 'max_size_in_actual'))->with('phonecode', $phonecode);
+            $platformUser = $this->platformUserByEmail(request()->get('email'));
+
+            return view('themes.default1.client.helpdesk.form', compact('topics', 'codes', 'email_mandatory', 'max_size_in_bytes', 'max_size_in_actual', 'platformUser'))->with('phonecode', $phonecode);
         } else {
             return \Redirect::route('home');
+        }
+    }
+
+    /**
+     * Look a customer up in the main platform database so the ticket form can
+     * be prefilled for them. The support desk only ever receives the email
+     * (the app appends ?email= to the form URL), so that is the only key.
+     *
+     * The platform database is a separate server: if it is unreachable the
+     * form must still render, just without the prefill, so every failure here
+     * is swallowed and reported as "no user found".
+     *
+     * @param string|null $email
+     * @return object|null
+     */
+    protected function platformUserByEmail($email)
+    {
+        if (! $email) {
+            return null;
+        }
+
+        try {
+            return \DB::connection('main_platform')
+                ->table('users')
+                ->select('name', 'phone', 'country_key')
+                ->where('email', '=', $email)
+                ->first();
+        } catch (\Exception $e) {
+            \Log::warning('Ticket form prefill lookup failed: '.$e->getMessage());
+
+            return null;
         }
     }
 
@@ -254,7 +287,16 @@ class FormController extends Controller
                 return Redirect::back()->withInput($request->except('password'))->with('fails', Lang::get('lang.failed-to-create-user-tcket-as-mobile-has-been-taken'));
             }
         } catch (\Exception $ex) {
-            return redirect()->back()->with('fails', $ex->getMessage());
+            /*
+             * Never surface the raw exception: it leaks infrastructure detail
+             * (SMTP usernames, hosts, credentials) to a public form. Log it
+             * for operators and show the user something actionable instead.
+             */
+            \Log::error('Client ticket form failure: '.$ex->getMessage(), [
+                'exception' => $ex,
+            ]);
+
+            return redirect()->back()->with('fails', Lang::get('lang.sorry_something_went_wrong'));
         }
 //        dd($result);
     }

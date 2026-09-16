@@ -14,11 +14,20 @@
         <!-- faveo favicon -->
         <link href="{{asset("lb-faveo/media/images/favicon.ico")}}"  rel="shortcut icon" >
 
-        <meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
+        <meta content='width=device-width, initial-scale=1' name='viewport'>
 
        <link href="{{asset("lb-faveo/css/widgetbox.min.css")}}" rel="stylesheet" type="text/css" />
         <!-- Bootstrap 4.3.1 -->
-        <link href="{{asset("lb-faveo/css/bootstrap5.min.css")}}" rel="stylesheet" type="text/css" />
+        <?php
+        // Cache-bust the theme stylesheets. The server sends no Cache-Control
+        // on these files, so browsers cache them heuristically for weeks and
+        // miss deploys. Appending the file mtime gives each edit a new URL.
+        $cssVersion = function ($path) {
+            $full = public_path($path);
+            return asset($path).'?v='.(is_file($full) ? filemtime($full) : '1');
+        };
+        ?>
+        <link href="{{ $cssVersion('lb-faveo/css/bootstrap5.min.css') }}" rel="stylesheet" type="text/css" />
         <!-- Font Awesome Icons -->
         <link href="{{asset("lb-faveo/css/font-awesome-5.min.css")}}" rel="stylesheet" type="text/css" />
 
@@ -26,11 +35,11 @@
         <!-- Theme style -->
 {{--           <link href="{{asset("lb-faveo/css/client.min.css")}}" rel="stylesheet" type="text/css" />--}}
 
-      <link href="{{asset("lb-faveo/css/app.3.0.css")}}" rel="stylesheet" type="text/css">
+      <link href="{{ $cssVersion('lb-faveo/css/app.3.0.css') }}" rel="stylesheet" type="text/css">
 
-        <link href="{{asset("lb-faveo/css/custom.css")}}" rel="stylesheet" type="text/css">
+        <link href="{{ $cssVersion('lb-faveo/css/custom.css') }}" rel="stylesheet" type="text/css">
 
-        <link href="{{asset("lb-faveo/css/edit.css")}}" rel="stylesheet" type="text/css">
+        <link href="{{ $cssVersion('lb-faveo/css/edit.css') }}" rel="stylesheet" type="text/css">
 
         <link href="{{asset("lb-faveo/css/jquery.rating.css")}}" rel="stylesheet" type="text/css" />
 
@@ -76,7 +85,11 @@
 
             .lang{cursor: pointer;}
 
-            .breadcrumb{background-color: transparent !important;padding: 0 !important;margin-top: 15px !important;margin-left: 17% !important;}
+            .breadcrumb{background-color: transparent !important;padding: 0 !important;margin-top: 15px !important;}
+
+            @media (min-width: 992px) {
+                .breadcrumb{margin-left: 17% !important;}
+            }
 
             .text-small{font-size: 14px;}
 
@@ -121,7 +134,7 @@
                             <a href="{{url('/')}}" rel="home">
                                 @endif
                                 @if($company->use_logo == 1)
-                                <img src="{{asset('uploads/company')}}{{'/'}}{{$company->logo}}" alt="User Image" width="200px" height="200px"/>
+                                <img src="{{asset('uploads/company')}}{{'/'}}{{$company->logo}}" alt="{{ strip_tags($company->company_name) }}" class="site-logo-img" width="200" height="200"/>
                                 @else
                                 @if($system->name)
                                 {!! $system->name !!}
@@ -314,32 +327,13 @@
                         </div>
                     </nav>
 
-                    <div id="header-search" class="site-search clearfix" style="margin-right: 90%; width: 100%"><!-- #header-search -->
-                        {!!Form::open(['route' => 'client.search','class'=>'search-form clearfix'])!!}
-                        <div class="form-border" style="z-index: 0;width: 85%;">
-                            <div class="form-inline ">
-                                <div class="form-group input-group " style="width: 98% ">
-                                    <input type="text" name="s" class="search-field form-control" title="Enter search term" placeholder="{{trans('lang.have_a_question?_type_your_search_term_here')}}" required="" style="width: 80%">
-                                    <span class="input-group-btn">
-                                        <button type="submit" class="btn btn-custom btn-md " style="margin-left: 20% ;background-color: #009aba; hov: #00c0ef; color: #fff ">{{trans('lang.search')}}</button>
-                                    </span>
-                                </div>
-                            </div><!----><!----></div>
-                                <style>
-                                    .search-field {
-                                        border-radius: 10px; /* You can adjust the value to your desired radius */
-                                    }
-                                </style>
-                            </div>
-                        </div>
-                        {!! Form::close() !!}
-                    </div>
                 </div>
             </header>
             <!-- Left side column. contains the logo and sidebar -->
-            <div class="site-hero clearfix">
+            <?php $breadcrumb = trim($__env->yieldContent('breadcrumb')); ?>
+            <div class="site-hero clearfix{{ $breadcrumb === '' ? ' site-hero-empty' : '' }}">
 {{--                {!! \DaveJamesMiller\Breadcrumbs\Facades\Breadcrumbs::render() !!}--}}
-                @yield('breadcrumb')
+                {!! $breadcrumb !!}
             </div>
 
 
@@ -367,6 +361,12 @@
                             @endif
 
                             <!-- Failure message -->
+                            {{--
+                                Hidden on request. NOTE: this is the only error
+                                channel the client ticket form has -- it also
+                                carries "mobile number already taken" and
+                                country-code errors, so those now fail silently
+                                too. Uncomment to restore.
                             @if(Session::has('fails'))
                                 @if(Session::has('check'))
                                         <?php goto a; ?>
@@ -379,6 +379,7 @@
                                 </div>
                                     <?php a: ?>
                             @endif
+                            --}}
                         </div>
                         <div class="row">
                             @yield('content')
@@ -604,7 +605,6 @@ $(function () {
 });
             </script>
 
-        </div>
-        </div>
+        </div><!-- #page -->
     </body>
 </html>
