@@ -29,18 +29,30 @@ class SendWhatsAppNotifications
             return;
         }
 
-        $user = $this->getTicketOwner($ticket);
-        if (! $user) {
+        /*
+         * The alert always goes to one fixed business/admin number, for a
+         * ticket from ANY account. The customer's own name/phone only fill in
+         * the message text.
+         */
+        $recipient = config('whatsapp.notify_number');
+        if (! $recipient) {
             return;
         }
 
-        $phone = $user->routeNotificationForWhatsApp();
-        if (! $phone) {
+        $user = $this->getTicketOwner($ticket);
+
+        /*
+         * after.ticket.created fires more than once per ticket. Send only on
+         * the first fire. add() is atomic: it writes the key only if absent and
+         * returns false when it already exists, so a second fire returns here.
+         */
+        $guardKey = 'wa_ticket_created_'.$ticket->ticket_number;
+        if (! \Cache::add($guardKey, true, now()->addHours(6))) {
             return;
         }
 
         $message = $this->buildTicketCreatedMessage($ticket, $user);
-        $this->whatsAppService->send($phone, $message);
+        $this->whatsAppService->send($recipient, $message);
     }
 
     public function handleTicketReply(FaveoAfterReply $event): void
@@ -93,14 +105,21 @@ class SendWhatsAppNotifications
 
     protected function buildTicketCreatedMessage($ticket, $user): string
     {
+        /*
+         * Same wording as the driving app's own alert:
+         *   "تم إنشاء تذكرة جديدة بواسطة {name} برقم {phone}"
+         * name/phone describe the customer who opened the ticket; the message
+         * itself is delivered to the fixed business number.
+         */
+        $name = '';
+        $phone = '';
+        if ($user) {
+            $name = method_exists($user, 'name') ? $user->name() : ($user->user_name ?? '');
+            $phone = $user->mobile ?? ($user->routeNotificationForWhatsApp() ?? '');
+        }
+
         return WhatsAppMessage::create()
-            ->line('🎫 New Ticket Created')
-            ->line('')
-            ->line("Ticket #{$ticket->ticket_number}")
-            ->line("Subject: {$ticket->subject}")
-            ->line("Priority: {$this->getPriorityLabel($ticket->priority)}")
-            ->line("Status: {$this->getStatusLabel($ticket->status)}")
-            ->line('')
+            ->line("تم إنشاء تذكرة جديدة بواسطة {$name} برقم {$phone}")
             ->content;
     }
 

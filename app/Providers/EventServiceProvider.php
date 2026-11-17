@@ -15,11 +15,15 @@ class EventServiceProvider extends ServiceProvider
         'App\Events\WorkFlowEvent' => [
             'App\Listeners\WorkFlowListen',
         ],
-//        'after.ticket.created' => [
-//            'App\Listeners\SendWhatsAppNotifications@handleTicketCreated',
-//        ],
+        /*
+         * SyncTicketToPlatform is queued and swallows its own failures, so it
+         * cannot stop the WhatsApp listener; both run on every fire of the
+         * event. SendWhatsAppNotifications guards against the duplicate/early
+         * fires itself so the customer gets exactly one message.
+         */
         'after.ticket.created' => [
             'App\Listeners\SyncTicketToPlatform@handleTicketCreated',
+            'App\Listeners\SendWhatsAppNotifications@handleTicketCreated',
         ],
         /*
          * The platform sync runs first: a listener that throws stops the ones
